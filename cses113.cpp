@@ -1,12 +1,9 @@
 #include <bits/stdc++.h>
 using namespace std;
-
 const int mod = 1e9 + 7;
-
 int main() {
     int n, m;
     cin >> n >> m;
-
     vector<vector<int>> adj(n);
     for (int i = 0; i < m; i++) {
         int a, b;
@@ -14,10 +11,8 @@ int main() {
         a--; b--;
         adj[a].push_back(b);
     }
-
     int FULL = 1 << n;
     vector<vector<int>> dp(FULL, vector<int>(n, 0));
-
     dp[1][0] = 1;  
     for (int mask = 1; mask < FULL; mask++) {
         for (int u = 0; u < n; u++) {
