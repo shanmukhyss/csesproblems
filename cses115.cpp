@@ -1,97 +1,93 @@
-#include <bits/stdc++.h>
+#include<bits/stdc++.h>
 using namespace std;
+class edge{
+    public:
+    int to;
+    long long cap;
+    int rev;
+};
+class dinic{
+    public:
+    int n;
+    vector<vector<edge>>graph;
+    vector<int>level;
+    vector<int>work;
+    dinic(int n){
+        this->n=n;
+        graph.resize(n+1);
+        level.assign(n+1,-1);
+        work.resize(n+1);
+    }
 
-struct Edge {
-    int to;               // destination node
-    long long cap;        // remaining capacity
-    int rev;              // index of reverse edge
+    void add(int u, int v, int c){
+        graph[u].push_back({v,c,graph[v].size()});
+        graph[v].push_back({u,0,graph[u].size()-1});
+    }
+
+    bool bfs(int start, int end){
+        level.assign(n+1,-1);
+        level[start]=0;
+        queue<int>q;
+        q.push(start);
+        while(!q.empty()){
+            int curr=q.front();
+            q.pop();
+            for(auto &e:graph[curr]){
+                if(e.cap>0 && level[e.to]== -1){
+                    level[e.to] = level[curr]+1;
+                    q.push(e.to);
+                }
+            }                      
+       }
+        return level[end]!=-1;
+    }
+
+    long long dfs( int start , int end , long long flow){
+        if(start==end){
+            return flow;
+        }
+
+       for(int i=work[start];i<graph[start].size();i++){
+            work[start]=i;
+            edge &e = graph[start][i];
+            if(e.cap>0 && level[e.to]== level[start]+1){
+                long long pushed= dfs(e.to,end,min(flow,e.cap));
+                if(pushed>0){
+                    e.cap-=pushed;
+                    graph[e.to][e.rev].cap+=pushed;
+                    return pushed;
+                }
+            }
+       }
+       work[start]=graph[start].size();
+       return 0;
+    }
 };
 
-vector<vector<Edge>> graph;
-vector<int> level;       // BFS levels
-vector<int> work;        // remembers next edge to try
 
-// Add forward and reverse edges
-void add_edge(int from, int to, long long cap) {
-    graph[from].push_back({to, cap, (int)graph[to].size()});
-    graph[to].push_back({from, 0, (int)graph[from].size() - 1});
-}
 
-// Build level graph using BFS
-bool bfs(int start, int end) {
-    fill(level.begin(), level.end(), -1);
-    queue<int> q;
+int main(){
+    int n,m;
+    cin>>n>>m;
+    dinic d(n);
 
-    level[start] = 0;
-    q.push(start);
-
-    while (!q.empty()) {
-        int cur = q.front();
-        q.pop();
-
-        for (int i = 0; i < graph[cur].size(); i++) {
-            Edge &e = graph[cur][i];
-            if (e.cap > 0 && level[e.to] == -1) {
-                level[e.to] = level[cur] + 1;
-                q.push(e.to);
-            }
-        }
-    }
-
-    return level[end] != -1;
-}
-
-// Send flow using DFS (classic version, no reference trick)
-long long dfs(int cur, int end, long long flow) {
-    if (cur == end) return flow;
-
-    for (int i = work[cur]; i < graph[cur].size(); i++) {
-        work[cur] = i;  // remember this edge
-
-        Edge &e = graph[cur][i];
-
-        if (e.cap > 0 && level[e.to] == level[cur] + 1) {
-            long long pushed = dfs(e.to, end, min(flow, e.cap));
-
-            if (pushed > 0) {
-                e.cap -= pushed;
-                graph[e.to][e.rev].cap += pushed;
-                return pushed;
-            }
-        }
-    }
-
-    work[cur] = graph[cur].size(); // no more edges to try
-    return 0;
-}
-
-int main() {
-    int n, m;
-    cin >> n >> m;
-
-    graph.resize(n + 1);
-    level.resize(n + 1);
-    work.resize(n + 1);
-
-    for (int i = 0; i < m; i++) {
-        int a, b;
+    for(int i=0;i<m;i++){
+        int a,b;
         long long c;
-        cin >> a >> b >> c;
-        add_edge(a, b, c);
+        cin>>a>>b>>c;
+        d.add(a,b,c);
     }
-
-    long long max_speed = 0;
-
-    while (bfs(1, n)) {
-        fill(work.begin(), work.end(), 0);
-
-        while (true) {
-            long long flow = dfs(1, n, LLONG_MAX);
-            if (flow == 0) break;
-            max_speed += flow;
+    long long ans=0;
+    while(d.bfs(1,n)){
+        d.work.assign(n+1,0);
+        while(true){
+           long long  flow=d.dfs(1,n,LONG_LONG_MAX);
+            if(flow==0){
+                break;
+            }
+            ans+=flow;
         }
     }
-
-    cout << max_speed << "\n";
+    cout<<ans<<endl;
     return 0;
 }
