@@ -53,7 +53,7 @@ int main() {
             if (nx < 0 || ny < 0 || nx >= n || ny >= m) continue;
             if (grid[nx][ny] == '#') continue;
             if (dist[x][y] + 1 >= monster_dist[nx][ny]) continue;
-            if (dist[nx][ny] != INF) continue;
+            if (dist[nx][ny] <=dist[x][y]+1) continue;
             dist[nx][ny] = dist[x][y] + 1;
             parent[nx][ny] = dir[i];
             qa.push({nx, ny});
