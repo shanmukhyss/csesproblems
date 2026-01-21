@@ -25,19 +25,15 @@ public:
     }
 };
 
-bool compare(const tuple<int,int,int>& a,
-             const tuple<int,int,int>& b) {
-    return get<0>(a) > get<0>(b); // sort by a descending
+bool compare( tuple<int,int,int>& a,tuple<int,int,int>& b){             
+    return get<0>(a) > get<0>(b); 
 }
 
 int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
 
     int n, q;
     cin >> n >> q;
-
-    // 1-based heights
+ 
     vector<int> h(n + 1);
     for (int i = 1; i <= n; i++)
         cin >> h[i];
