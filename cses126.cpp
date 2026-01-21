@@ -1,80 +1,80 @@
-#include <bits/stdc++.h>
+#include<bits/stdc++.h>
 using namespace std;
-
-struct SegTree {
+class segment{
+    public:
     int n;
-    vector<long long> tree;
-
-    SegTree(int size) {
-        n = size;
-        tree.assign(4 * n, 0);
+    vector<int>seg;
+    segment(int n){
+        this->n=n;
+        seg.resize(4*n);
     }
-
-    void build(const vector<long long>& a, int ind, int l, int r) {
-        if (l == r) {
-            tree[ind] = a[l];
-            return;
+    void build(int ind, int low, int high, vector<int>&arr){
+        if(low==high){
+            seg[ind]=arr[low];
+            return ;
         }
-        int mid = (l + r) / 2;
-        build(a, 2 * ind + 1, l, mid);
-        build(a, 2 * ind + 2, mid + 1, r);
-        tree[ind] = max(tree[2 * ind + 1], tree[2 * ind + 2]);
+        int mid=(low+high)/2;
+        build(2*ind+1,low,mid,arr);
+        build(2*ind+2,mid+1,high,arr);
+        seg[ind]=max(seg[2*ind+1],seg[2*ind+2]);
     }
-
-    // Find leftmost index with value >= x
-    int query(int ind, int l, int r, long long x) {
-        if (tree[ind] < x) return -1;
-        if (l == r) return l;
-
-        int mid = (l + r) / 2;
-        if (tree[2 * ind + 1] >= x)
-            return query(2 * ind + 1, l, mid, x);
-        else
-            return query(2 * ind + 2, mid + 1, r, x);
-    }
-
-    void update(int ind, int l, int r, int pos, long long val) {
-        if (l == r) {
-            tree[ind] = val;
-            return;
+    int query(int ind, int val, int low, int high){
+        if(seg[ind]<val){
+            return -1;
         }
-        int mid = (l + r) / 2;
-        if (pos <= mid)
-            update(2 * ind + 1, l, mid, pos, val);
-        else
-            update(2 * ind + 2, mid + 1, r, pos, val);
-
-        tree[ind] = max(tree[2 * ind + 1], tree[2 * ind + 2]);
+        if(low==high){
+            return low;
+        }
+        int mid=(low+high)/2;
+        int p=0;
+        if(seg[2*ind+1]>=val){
+           p= query(2*ind+1,val,low,mid);
+        }
+        else{
+            p= query(2*ind+2,val,mid+1,high);
+        }
+        return p;
     }
+    void update(int ind, int val, int low, int high , int idx){
+        if(low==high){
+            seg[ind]-=val;
+            return ;
+        }
+        int mid=(low+high)/2;
+        if(idx>mid){
+            update(2*ind+2,val,mid+1,high,idx);
+        }
+        else{
+            update(2*ind+1,val,low,mid,idx);
+        }
+        seg[ind]=max(seg[2*ind+1],seg[2*ind+2]);
+    }
+    
 };
+int main(){
+    int n,m;
+    cin>>n>>m;
+    vector<int>h(n);
+    vector<int>g(m);
 
-int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
+    for(int i=0;i<n;i++){
+        cin>>h[i];
+    }
+    for(int i=0;i<m;i++){
+        cin>>g[i];
+    }
+    segment s(n);
+    s.build(0,0,n-1,h);
 
-    int n, m;
-    cin >> n >> m;
-
-    vector<long long> h(n);
-    for (int i = 0; i < n; i++) cin >> h[i];
-
-    SegTree st(n);
-    st.build(h, 0, 0, n - 1);
-
-    for (int i = 0; i < m; i++) {
-        long long r;
-        cin >> r;
-
-        int idx = st.query(0, 0, n - 1, r);
-        if (idx == -1) {
-            cout << 0 << " ";
-        } else {
-            cout << idx + 1 << " ";
-            h[idx] -= r;
-            st.update(0, 0, n - 1, idx, h[idx]);
+    for(int i=0;i<m;i++){
+        int idx=s.query(0,g[i],0,n-1);
+        if(idx==-1){
+            cout<<0<<" ";
+        }
+        else{
+            cout<<idx+1<<" ";
+            s.update(0,g[i],0,n-1,idx);
         }
     }
-
-    cout << "\n";
     return 0;
 }
