@@ -1,112 +1,145 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-vector<long long> seg;
-vector<long long> lazy_add;
-vector<long long> lazy_set;
-vector<bool> has_set;
+class segment {
+public:
+    int n;
+    vector<long long> seg;
+    vector<long long> lazy_add;
+    vector<long long> lazy_set;
+    vector<bool> has_set;
 
-void build(int ind, int low, int high, vector<long long> &arr)
-{
-    if (low == high) {
-        seg[ind] = arr[low];
-        return;
+    segment(int n) {
+        this->n = n;
+        seg.assign(4*n, 0);
+        lazy_add.assign(4*n, 0);
+        lazy_set.assign(4*n, 0);
+        has_set.assign(4*n, false);
     }
 
-    int mid = (low + high) >> 1;
-    build(2*ind+1, low, mid, arr);
-    build(2*ind+2, mid+1, high, arr);
-    seg[ind] = seg[2*ind+1] + seg[2*ind+2];
-}
-
-void push(int ind, int low, int high)
-{
-    if (low == high) return;
-
-    int left = 2*ind+1;
-    int right = 2*ind+2;
-    int mid = (low + high) >> 1;
-
-    // push set
-    if (has_set[ind]) {
-        seg[left]  = (long long)(mid - low + 1) * lazy_set[ind];
-        seg[right] = (long long)(high - mid) * lazy_set[ind];
-
-        has_set[left] = has_set[right] = true;
-        lazy_set[left] = lazy_set[right] = lazy_set[ind];
-        lazy_add[left] = lazy_add[right] = 0;
-
-        has_set[ind] = false;
+    void build(int ind, int low, int high, vector<long long>& arr) {
+        if (low == high) {
+            seg[ind] = arr[low];
+            return;
+        }
+        int mid = (low + high) >> 1;
+        build(2*ind+1, low, mid, arr);
+        build(2*ind+2, mid+1, high, arr);
+        seg[ind] = seg[2*ind+1] + seg[2*ind+2];
     }
 
-    // push add
-    if (lazy_add[ind] != 0) {
-        seg[left]  += (long long)(mid - low + 1) * lazy_add[ind];
-        seg[right] += (long long)(high - mid) * lazy_add[ind];
+    // range add
+    void update_add(int ind, int low, int high, int a, int b, long long val) {
 
-        lazy_add[left] += lazy_add[ind];
-        lazy_add[right] += lazy_add[ind];
+        if (has_set[ind]) {
+            seg[ind] = (high - low + 1) * lazy_set[ind];
+            if (low != high) {
+                has_set[2*ind+1] = has_set[2*ind+2] = true;
+                lazy_set[2*ind+1] = lazy_set[2*ind+2] = lazy_set[ind];
+                lazy_add[2*ind+1] = lazy_add[2*ind+2] = 0;
+            }
+            has_set[ind] = false;
+        }
 
-        lazy_add[ind] = 0;
-    }
-}
+        if (lazy_add[ind] != 0) {
+            seg[ind] += (high - low + 1) * lazy_add[ind];
+            if (low != high) {
+                lazy_add[2*ind+1] += lazy_add[ind];
+                lazy_add[2*ind+2] += lazy_add[ind];
+            }
+            lazy_add[ind] = 0;
+        }
 
-void range_add(int ind, int low, int high, int l, int r, long long val)
-{
-    if (r < low || l > high) return;
+        if (low > b || high < a) return;
 
-    if (l <= low && high <= r) {
-        seg[ind] += (long long)(high - low + 1) * val;
-        lazy_add[ind] += val;
-        return;
-    }
+        if (a <= low && high <= b) {
+            seg[ind] += (high - low + 1) * val;
+            if (low != high) {
+                lazy_add[2*ind+1] += val;
+                lazy_add[2*ind+2] += val;
+            }
+            return;
+        }
 
-    push(ind, low, high);
-    int mid = (low + high) >> 1;
-
-    range_add(2*ind+1, low, mid, l, r, val);
-    range_add(2*ind+2, mid+1, high, l, r, val);
-
-    seg[ind] = seg[2*ind+1] + seg[2*ind+2];
-}
-
-void range_set(int ind, int low, int high, int l, int r, long long val)
-{
-    if (r < low || l > high) return;
-
-    if (l <= low && high <= r) {
-        seg[ind] = (long long)(high - low + 1) * val;
-        has_set[ind] = true;
-        lazy_set[ind] = val;
-        lazy_add[ind] = 0;
-        return;
+        int mid = (low + high) >> 1;
+        update_add(2*ind+1, low, mid, a, b, val);
+        update_add(2*ind+2, mid+1, high, a, b, val);
+        seg[ind] = seg[2*ind+1] + seg[2*ind+2];
     }
 
-    push(ind, low, high);
-    int mid = (low + high) >> 1;
+    // range set
+    void update_set(int ind, int low, int high, int a, int b, long long val) {
 
-    range_set(2*ind+1, low, mid, l, r, val);
-    range_set(2*ind+2, mid+1, high, l, r, val);
+        if (has_set[ind]) {
+            seg[ind] = (high - low + 1) * lazy_set[ind];
+            if (low != high) {
+                has_set[2*ind+1] = has_set[2*ind+2] = true;
+                lazy_set[2*ind+1] = lazy_set[2*ind+2] = lazy_set[ind];
+                lazy_add[2*ind+1] = lazy_add[2*ind+2] = 0;
+            }
+            has_set[ind] = false;
+        }
 
-    seg[ind] = seg[2*ind+1] + seg[2*ind+2];
-}
+        if (lazy_add[ind] != 0) {
+            seg[ind] += (high - low + 1) * lazy_add[ind];
+            if (low != high) {
+                lazy_add[2*ind+1] += lazy_add[ind];
+                lazy_add[2*ind+2] += lazy_add[ind];
+            }
+            lazy_add[ind] = 0;
+        }
 
-long long range_sum(int ind, int low, int high, int l, int r)
-{
-    if (r < low || l > high) return 0;
+        if (low > b || high < a) return;
 
-    if (l <= low && high <= r)
-        return seg[ind];
+        if (a <= low && high <= b) {
+            seg[ind] = (high - low + 1) * val;
+            if (low != high) {
+                has_set[2*ind+1] = has_set[2*ind+2] = true;
+                lazy_set[2*ind+1] = lazy_set[2*ind+2] = val;
+                lazy_add[2*ind+1] = lazy_add[2*ind+2] = 0;
+            }
+            return;
+        }
 
-    push(ind, low, high);
-    int mid = (low + high) >> 1;
+        int mid = (low + high) >> 1;
+        update_set(2*ind+1, low, mid, a, b, val);
+        update_set(2*ind+2, mid+1, high, a, b, val);
+        seg[ind] = seg[2*ind+1] + seg[2*ind+2];
+    }
 
-    return range_sum(2*ind+1, low, mid, l, r) +
-           range_sum(2*ind+2, mid+1, high, l, r);
-}
+    long long query(int ind, int low, int high, int a, int b) {
 
-int main()
-{
+        if (has_set[ind]) {
+            seg[ind] = (high - low + 1) * lazy_set[ind];
+            if (low != high) {
+                has_set[2*ind+1] = has_set[2*ind+2] = true;
+                lazy_set[2*ind+1] = lazy_set[2*ind+2] = lazy_set[ind];
+                lazy_add[2*ind+1] = lazy_add[2*ind+2] = 0;
+            }
+            has_set[ind] = false;
+        }
+
+        if (lazy_add[ind] != 0) {
+            seg[ind] += (high - low + 1) * lazy_add[ind];
+            if (low != high) {
+                lazy_add[2*ind+1] += lazy_add[ind];
+                lazy_add[2*ind+2] += lazy_add[ind];
+            }
+            lazy_add[ind] = 0;
+        }
+
+        if (low > b || high < a) return 0;
+
+        if (a <= low && high <= b)
+            return seg[ind];
+
+        int mid = (low + high) >> 1;
+        return query(2*ind+1, low, mid, a, b) +
+               query(2*ind+2, mid+1, high, a, b);
+    }
+};
+
+int main() {
     ios::sync_with_stdio(false);
     cin.tie(NULL);
 
@@ -117,12 +150,8 @@ int main()
     for (int i = 0; i < n; i++)
         cin >> arr[i];
 
-    seg.assign(4*n, 0);
-    lazy_add.assign(4*n, 0);
-    lazy_set.assign(4*n, 0);
-    has_set.assign(4*n, false);
-
-    build(0, 0, n-1, arr);
+    segment st(n);
+    st.build(0, 0, n-1, arr);
 
     while (q--) {
         int type;
@@ -132,18 +161,19 @@ int main()
             int a, b;
             long long x;
             cin >> a >> b >> x;
-            range_add(0, 0, n-1, a-1, b-1, x);
+            st.update_add(0, 0, n-1, a-1, b-1, x);
         }
         else if (type == 2) {
             int a, b;
             long long x;
             cin >> a >> b >> x;
-            range_set(0, 0, n-1, a-1, b-1, x);
+            st.update_set(0, 0, n-1, a-1, b-1, x);
         }
         else {
             int a, b;
             cin >> a >> b;
-            cout << range_sum(0, 0, n-1, a-1, b-1) << '\n';
+            cout << st.query(0, 0, n-1, a-1, b-1) << '\n';
         }
     }
+    return 0;
 }
