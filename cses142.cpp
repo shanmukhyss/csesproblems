@@ -1,81 +1,101 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-struct Node {
+class node {
+public:
     long long sum;
-    Node *left, *right;
-    Node(long long s = 0, Node* l = nullptr, Node* r = nullptr)
-        : sum(s), left(l), right(r) {}
+    node *left, *right;
+
+    node(long long val = 0) {
+        sum = val;
+        left = right = nullptr;
+    }
+
+    node(node* l, node* r) {
+        left = l;
+        right = r;
+        sum = 0;
+        if (l) sum += l->sum;
+        if (r) sum += r->sum;
+    }
 };
 
-int n, q;
-vector<Node*> roots;
+class segment {
+public:
+    int n;
 
-/* Build initial segment tree */
-Node* build(int l, int r, const vector<int>& arr) {
-    if (l == r)
-        return new Node(arr[l]);
-    int mid = (l + r) / 2;
-    Node* left = build(l, mid, arr);
-    Node* right = build(mid + 1, r, arr);
-    return new Node(left->sum + right->sum, left, right);
-}
-
-/* Persistent point update */
-Node* update(Node* prev, int l, int r, int pos, int val) {
-    if (l == r)
-        return new Node(val);
-    int mid = (l + r) / 2;
-    if (pos <= mid) {
-        Node* left = update(prev->left, l, mid, pos, val);
-        return new Node(left->sum + prev->right->sum, left, prev->right);
-    } else {
-        Node* right = update(prev->right, mid + 1, r, pos, val);
-        return new Node(prev->left->sum + right->sum, prev->left, right);
+    segment(int n) {
+        this->n = n;
     }
-}
 
-/* Range sum query */
-long long query(Node* node, int l, int r, int ql, int qr) {
-    if (!node || qr < l || r < ql)
-        return 0;
-    if (ql <= l && r <= qr)
-        return node->sum;
-    int mid = (l + r) / 2;
-    return query(node->left, l, mid, ql, qr)
-         + query(node->right, mid + 1, r, ql, qr);
-}
+    node* build(int low, int high, vector<int>& arr) {
+        if (low == high) {
+            return new node(arr[low]);
+        }
+        int mid = (low + high) / 2;
+        node* left = build(low, mid, arr);
+        node* right = build(mid + 1, high, arr);
+        return new node(left, right);
+    }
+
+    node* update(node* root, int low, int high, int pos, long long val) {
+        if (low == high) {
+            return new node(val);
+        }
+        int mid = (low + high) / 2;
+        if (pos <= mid) {
+            node* newLeft = update(root->left, low, mid, pos, val);
+            return new node(newLeft, root->right);
+        } else {
+            node* newRight = update(root->right, mid + 1, high, pos, val);
+            return new node(root->left, newRight);
+        }
+    }
+
+    long long query(node* root, int low, int high, int l, int r) {
+        if (!root || r < low || high < l) return 0;
+        if (l <= low && high <= r) return root->sum;
+        int mid = (low + high) / 2;
+        return query(root->left, low, mid, l, r) +
+               query(root->right, mid + 1, high, l, r);
+    }
+};
 
 int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-
+    int n, q;
     cin >> n >> q;
-    vector<int> arr(n + 1);
-    for (int i = 1; i <= n; i++)
-        cin >> arr[i];
 
-    roots.push_back(build(1, n, arr));
+    vector<int> v(n);
+    for (int i = 0; i < n; i++) cin >> v[i];
+
+    segment s(n);
+    vector<node*> roots;
+
+    roots.push_back(s.build(0, n - 1, v)); // version 0
 
     while (q--) {
         int type;
         cin >> type;
+
         if (type == 1) {
-            int k, a, x;
+            int k, a;
+            long long x;
             cin >> k >> a >> x;
-            --k;
-            roots[k] = update(roots[k], 1, n, a, x);
-        } 
+            k--; a--;
+            roots.push_back(
+                s.update(roots[k], 0, n - 1, a, x)
+            );
+        }
         else if (type == 2) {
             int k, a, b;
             cin >> k >> a >> b;
-            --k;
-            cout << query(roots[k], 1, n, a, b) << "\n";
-        } 
+            k--; a--; b--;
+            cout << s.query(roots[k], 0, n - 1, a, b) << "\n";
+        }
         else {
             int k;
             cin >> k;
-            --k;
+            k--;
             roots.push_back(roots[k]);
         }
     }
