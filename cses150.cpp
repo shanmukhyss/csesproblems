@@ -10,7 +10,7 @@ vector<vector<int>> adj;
 void dfs(int node, int parent) {
     for (auto it : adj[node]) {
         if (it == parent) continue;
-        depth[it] = depth[node] + 1;   // FIX: dp -> depth
+        depth[it] = depth[node] + 1;   
         dfs(it, node);
     }
 }
