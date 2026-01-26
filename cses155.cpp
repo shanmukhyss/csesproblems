@@ -40,7 +40,6 @@ void decompose(int u, int h) {
     }
 }
 
-/* Segment Tree */
 void update(int idx, long long v, int node, int l, int r) {
     if (l == r) {
         seg[node] = v;
