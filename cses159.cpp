@@ -1,87 +1,120 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const int MAXN = 200005;
+class fenwick {
+public:
+    int n;
+    vector<int> bit;
+    fenwick(int n = 0) {
+        this->n = n;
+        bit.assign(n + 1, 0);
+    }
+    void reset(int n_) {
+        n = n_;
+        bit.assign(n + 1, 0);
+    }
+    void add(int i, int v) { 
+        while (i <= n) {
+            bit[i] += v;
+            i += i & -i;
+        }
+    }
+    int sum(int i) { 
+        int s = 0;
+        while (i > 0) {
+            s += bit[i];
+            i -= i & -i;
+        }
+        return s;
+    }
+    int range(int l, int r) {
+        if (l > r) return 0;
+        return sum(r) - sum(l - 1);
+    }
+};
+
+const int MAXN = 200000 + 5;
 
 int n, k1, k2;
 vector<int> adj[MAXN];
 int sz[MAXN];
 bool removed[MAXN];
-int cnt[MAXN];          // frequency of distances
+int cnt[MAXN];
 long long answer = 0;
 
-/* compute subtree sizes */
-void dfs_size(int u, int p) {
-    sz[u] = 1;
-    for (int v : adj[u]) {
-        if (v == p || removed[v]) continue;
-        dfs_size(v, u);
-        sz[u] += sz[v];
+
+void dfs(int node, int parent) {
+    sz[node] = 1;
+    for (auto it : adj[node]) {
+        if (it == parent || removed[it]) continue;
+        dfs(it, node);
+        sz[node] += sz[it];
     }
 }
 
-/* find centroid */
-int dfs_centroid(int u, int p, int total) {
-    for (int v : adj[u]) {
-        if (v == p || removed[v]) continue;
-        if (sz[v] > total / 2)
-            return dfs_centroid(v, u, total);
+
+int get_centroid(int node, int parent, int total) {
+    for (auto it : adj[node]) {
+        if (it == parent || removed[it]) continue;
+        if (sz[it] > total / 2)
+            return get_centroid(it, node, total);
     }
-    return u;
+    return node;
 }
 
-/* collect distances */
-void dfs_dist(int u, int p, int d, vector<int> &dist) {
-    if (d > k2) return;
-    dist.push_back(d);
-    for (int v : adj[u]) {
-        if (v == p || removed[v]) continue;
-        dfs_dist(v, u, d + 1, dist);
+void get_depths(int node, int parent, int depth, vector<int>& depths) {
+    if (depth > k2) return;
+    depths.push_back(depth);
+    for (auto it : adj[node]) {
+        if (it == parent || removed[it]) continue;
+        get_depths(it, node, depth + 1, depths);
     }
 }
 
-/* centroid decomposition */
-void decompose(int entry) {
-    dfs_size(entry, -1);
-    int c = dfs_centroid(entry, -1, sz[entry]);
+void decompose(int node) {
+    dfs(node, -1);
+    int c = get_centroid(node, -1, sz[node]);
     removed[c] = true;
 
+    vector<vector<int>> allDepths;
+    int maxDepth = 0;
+
+    for (auto it : adj[c]) {
+        if (removed[it]) continue;
+        vector<int> depths;
+        get_depths(it, c, 1, depths);
+        for (int d : depths) maxDepth = max(maxDepth, d);
+        if (!depths.empty())
+            allDepths.push_back(depths);
+    }
+
+    maxDepth = min(maxDepth, k2);
+
+    fenwick fw(maxDepth + 2);
     vector<int> used;
+    fw.add(1, 1);  
     cnt[0] = 1;
     used.push_back(0);
 
-    for (int v : adj[c]) {
-        if (removed[v]) continue;
-
-        vector<int> dist;
-        dfs_dist(v, c, 1, dist);
-
-        /* count valid paths */
-        for (int d : dist) {
+    for (auto &depths : allDepths) {
+        for (int d : depths) {
             int L = max(0, k1 - d);
-            int R = k2 - d;
-            if (L > R) continue;
-
-            for (int x = L; x <= R; x++)
-                answer += cnt[x];
+            int R = min(maxDepth, k2 - d);
+            if (L <= R)
+                answer += fw.range(L + 1, R + 1);
         }
-
-        /* update counts */
-        for (int d : dist) {
-            if (cnt[d] == 0)
-                used.push_back(d);
+        for (int d : depths) {
+            if (cnt[d] == 0) used.push_back(d);
             cnt[d]++;
+            fw.add(d + 1, 1);
         }
     }
+    for (int d : used)
+        cnt[d] = 0;
 
-    /* cleanup */
-    for (int x : used)
-        cnt[x] = 0;
-
-    for (int v : adj[c]) {
-        if (!removed[v])
-            decompose(v);
-    }
+    for (auto it : adj[c])
+        if (!removed[it])
+            decompose(it);
 }
 
 int main() {
@@ -89,7 +122,6 @@ int main() {
     cin.tie(nullptr);
 
     cin >> n >> k1 >> k2;
-
     for (int i = 0; i < n - 1; i++) {
         int a, b;
         cin >> a >> b;
@@ -98,6 +130,7 @@ int main() {
     }
 
     decompose(1);
+
     cout << answer << '\n';
     return 0;
 }
