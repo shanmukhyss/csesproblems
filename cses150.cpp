@@ -39,11 +39,10 @@ int lca(int a, int b) {
 }
 
 int main() {
-    int n, q;
-    cin >> n >> q;
     ios::sync_with_stdio(false);
     cin.tie(NULL);
-
+    int n, q;
+    cin >> n >> q;
 
     up.assign(n + 1, vector<int>(LOG, -1));  
     depth.assign(n + 1, 0);

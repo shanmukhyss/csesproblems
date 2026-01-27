@@ -1,120 +1,117 @@
-#include <bits/stdc++.h>
+/*
+Problem Name: Path Queries II
+Problem Link: https://cses.fi/problemset/task/2134
+Author: Sachin Srivastava (mrsac7)
+*/
+#include "bits/stdc++.h"
 using namespace std;
 
-const int N = 200005;
-vector<int> adj[N];
-int parent[N], depth[N], heavy[N], head[N], pos[N];
-int sz[N];
-int cur_pos;
-long long val[N];
-long long seg[4*N];
+#define int long long
+#define endl '\n'
 
-void dfs(int u, int p) {
-    parent[u] = p;
-    sz[u] = 1;
-    int maxsz = 0;
+const int mxN = 2e5+5;
+vector<int> adj[mxN];
+int dp[mxN], depth[mxN], par[mxN];
+int heavy[mxN], head[mxN], id[mxN];
+int seg[10*mxN];
+int N;
+int val[mxN];
 
-    for (int v : adj[u]) {
-        if (v == p) continue;
-        depth[v] = depth[u] + 1;
-        dfs(v, u);
-        sz[u] += sz[v];
-        if (sz[v] > maxsz) {
-            maxsz = sz[v];
-            heavy[u] = v;
+void update(int k, int x) {
+    k += N; seg[k] = x; k >>= 1;
+    while (k > 0) {
+        seg[k] = max(seg[2*k], seg[2*k+1]);
+        k >>= 1;
+    }
+}
+
+int query(int a, int b) {
+    a += N, b += N;
+    int s = 0;
+    while (a <= b) {
+        if (a & 1) {
+            s = max(s, seg[a]);
+            a++;
         }
+        if (~b & 1) {
+            s = max(s, seg[b]);
+            b--;
+        }
+        a >>= 1, b >>= 1;
+    }
+    return s;
+}
+
+void dfs(int s, int p) {
+    dp[s] = 1;
+    int mx = 0;
+    for (auto i: adj[s]) if (i != p) {
+        par[i] = s;
+        depth[i] = depth[s] + 1;
+        dfs(i, s);
+        dp[s] += dp[i];        
+        if (dp[i] > mx)
+            mx = dp[i], heavy[s] = i;
     }
 }
 
-void decompose(int u, int h) {
-    head[u] = h;
-    pos[u] = ++cur_pos;
-
-    if (heavy[u]) {
-        decompose(heavy[u], h);
-    }
-
-    for (int v : adj[u]) {
-        if (v == parent[u] || v == heavy[u]) continue;
-        decompose(v, v);
+int cnt = 0;
+void hld(int s, int h) {
+    head[s] = h;
+    id[s] = ++cnt;
+    update(id[s]-1, val[s]);
+    if (heavy[s])
+        hld(heavy[s], h);
+    for (auto i: adj[s]) {
+        if (i != par[s] && i != heavy[s])
+            hld(i, i);
     }
 }
 
-void update(int idx, long long v, int node, int l, int r) {
-    if (l == r) {
-        seg[node] = v;
-        return;
+int path(int x, int y){
+    int ans = 0;
+    while (head[x] != head[y]) {
+        if (depth[head[x]] > depth[head[y]])
+            swap(x, y);
+        ans = max(ans, query(id[head[y]]-1, id[y]-1));
+        y = par[head[y]];
     }
-    int mid = (l + r) / 2;
-    if (idx <= mid) update(idx, v, node*2, l, mid);
-    else update(idx, v, node*2+1, mid+1, r);
-    seg[node] = max(seg[node*2], seg[node*2+1]);
+    if(depth[x] > depth[y]) 
+        swap(x, y);
+    ans = max(ans, query(id[x]-1, id[y]-1));
+    return ans;
 }
 
-long long query(int ql, int qr, int node, int l, int r) {
-    if (qr < l || r < ql) return LLONG_MIN;
-    if (ql <= l && r <= qr) return seg[node];
-    int mid = (l + r) / 2;
-    return max(query(ql, qr, node*2, l, mid),
-               query(ql, qr, node*2+1, mid+1, r));
-}
 
-long long path_query(int a, int b, int n) {
-    long long res = LLONG_MIN;
+signed main(){
+    ios_base::sync_with_stdio(false);cin.tie(0);cout.tie(0);
+    #ifdef LOCAL
+    freopen("input.txt", "r" , stdin);
+    freopen("output.txt", "w", stdout);
+    #endif
+    
+    int n, t; cin>>n>>t;
+    N = 1 << (int) ceil(log2(n));
+    for (int i = 1; i <= n; i++) 
+        cin>>val[i];
 
-    while (head[a] != head[b]) {
-        if (depth[head[a]] < depth[head[b]])
-            swap(a, b);
-        res = max(res, query(pos[head[a]], pos[a], 1, 1, n));
-        a = parent[head[a]];
+    for (int i = 1; i < n; i++) {
+        int x, y; cin>>x>>y;
+        adj[x].push_back(y);
+        adj[y].push_back(x);
     }
-
-    if (depth[a] > depth[b]) swap(a, b);
-    res = max(res, query(pos[a], pos[b], 1, 1, n));
-
-    return res;
-}
-
-int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-
-    int n, q;
-    cin >> n >> q;
-
-    for (int i = 1; i <= n; i++) {
-        cin >> val[i];
-    }
-
-    for (int i = 0; i < n-1; i++) {
-        int a, b;
-        cin >> a >> b;
-        adj[a].push_back(b);
-        adj[b].push_back(a);
-    }
-
     dfs(1, 0);
-    decompose(1, 1);
+    hld(1, 1);
 
-    for (int i = 1; i <= n; i++) {
-        update(pos[i], val[i], 1, 1, n);
-    }
-
-    while (q--) {
-        int type;
-        cin >> type;
-        if (type == 1) {
-            int s;
-            long long x;
-            cin >> s >> x;
-            val[s] = x;
-            update(pos[s], x, 1, 1, n);
-        } else {
-            int a, b;
-            cin >> a >> b;
-            cout << path_query(a, b, n) << '\n';
+    while (t--) {
+        int ch; cin>>ch;
+        if (ch == 1) {
+            int k, x; cin>>k>>x;
+            update(id[k]-1, x);
+        }
+        else {
+            int x, y; cin>>x>>y;
+            cout << path(x, y) << ' ';
         }
     }
-
-    return 0;
 }
