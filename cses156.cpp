@@ -62,8 +62,6 @@ void dfs(int u, int p, bool keep) {
         distinctColors++;
 
     ans[u] = distinctColors;
-
-    // remove data if not kept
     if (!keep) {
         add_subtree(u, p, -1);
         distinctColors = 0;
