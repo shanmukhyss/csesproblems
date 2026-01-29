@@ -1,9 +1,7 @@
 #include<bits/stdc++.h>
 using namespace std;
-
 int maxi = 20;
 vector<long long> fact(maxi + 1);
-
 int main(){
     int t;
     cin >> t;
