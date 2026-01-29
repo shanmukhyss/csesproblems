@@ -2,9 +2,9 @@
 using namespace std;
 
 static const long long MOD = 1e9 + 7;
-static const int MAXA = 1e6;
+static const int maxi = 1e6;
 
-long long fact[MAXA + 1], inv_fact[MAXA + 1];
+long long fact[maxi + 1], inv[ maxi+ 1];
 
 long long modpow(long long a, long long b) {
     long long res = 1;
@@ -21,12 +21,12 @@ int main() {
     cin.tie(nullptr);
 
     fact[0] = 1;
-    for (int i = 1; i <= MAXA; i++)
+    for (int i = 1; i <= maxi; i++)
         fact[i] = fact[i - 1] * i % MOD;
 
-    inv_fact[MAXA] = modpow(fact[MAXA], MOD - 2);
-    for (int i = MAXA; i > 0; i--)
-        inv_fact[i - 1] = inv_fact[i] * i % MOD;
+    inv[maxi] = modpow(fact[maxi], MOD - 2);
+    for (int i = maxi; i > 0; i--)
+        inv[i - 1] = inv[i] * i % MOD;
 
     int n;
     cin >> n;
@@ -34,8 +34,8 @@ int main() {
         int a, b;
         cin >> a >> b;
         long long ans = fact[a];
-        ans = ans * inv_fact[b] % MOD;
-        ans = ans * inv_fact[a - b] % MOD;
+        ans = ans * inv[b] % MOD;
+        ans = ans * inv[a - b] % MOD;
         cout << ans << "\n";
     }
 }
