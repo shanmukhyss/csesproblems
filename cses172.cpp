@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-static const long long MOD = 1000000007;
+long long MOD = 1000000007;
 
 long long modpow(long long a, long long b) {
     long long res = 1;
