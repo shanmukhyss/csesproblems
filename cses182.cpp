@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const long long MOD = 1000000007;
+const long long MOD = 1e9+7;
 
 using Matrix = vector<vector<long long>>;
 
