@@ -1,5 +1,4 @@
 #include <bits/stdc++.h>
-#include <cfenv>
 using namespace std;
  
 int n, a, b;
