@@ -6,11 +6,7 @@ int main() {
     cin.tie(nullptr);
 
     const int MAXN = 10000000;
-
-    // Store representation of c^2 + d^2
     vector<pair<int,int>> twoSquares(MAXN + 1, {-1, -1});
-
-    // Precompute all c^2 + d^2
     for (int c = 0; c * c <= MAXN; c++) {
         for (int d = 0; c * c + d * d <= MAXN; d++) {
             int v = c * c + d * d;
