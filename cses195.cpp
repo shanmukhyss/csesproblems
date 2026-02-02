@@ -1,20 +1,37 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+const int maxN = 1e6 + 1;
+
+
+int lose[42] = {
+    0, 1, 2, 4, 7, 10, 20, 23, 26, 50, 53, 270, 273, 276, 282, 285, 288,
+    316, 334, 337, 340, 346, 359, 362, 365, 386, 389, 392, 566, 630,
+    633, 636, 639, 673, 676, 682, 685, 923, 926, 929, 932, 1222
+};
+
+bool b[maxN];
+
+void init() {
+    for (int x : lose) {
+        b[x] = true;
+    }
+}
+
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int t;
-    cin >> t;
-    while (t--) {
-        long long n;
-        cin >> n;
+    init();
 
-        if (n % 3 == 1)
-            cout << "second\n";
-        else
-            cout << "first\n";
+    int T;
+    cin >> T;
+
+    while (T--) {
+        int N;
+        cin >> N;
+        cout << (b[N] ? "second" : "first") << '\n';
     }
+
     return 0;
 }
