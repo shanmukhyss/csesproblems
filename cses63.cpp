@@ -10,28 +10,24 @@ int main() {
     vector<int> coin(n);
     for(int i = 0; i < n; i++) cin >> coin[i];
 
-    vector<vector<int>> dp(n, vector<int>(x + 1, 0));
+    vector<vector<int>> dp(n+1, vector<int>(x + 1, 0));
 
-    // Base case
-    for(int i = 0; i < n; i++)
+    for(int i = 0; i <= n; i++)
         dp[i][0] = 1;
 
-     for(int i=0;i<=x;i++){
-        if(i%coin[0]==0){
-            dp[0][i]=1;
-        }
-     }
-        
-   for(int i=1;i<n;i++){
-      for(int sum=1;sum<=x;sum++){
-        int nottake=dp[i-1][sum];
-        int take=0;
-        if(sum>=coin[i]){
-            take=dp[i][sum-coin[i]];
-        }
-        dp[i][sum]=(take+nottake)%mod;
-      }
-   }
+    for(int target = 1; target <= x; target++)
+        dp[n][target] = 0;
 
-    cout << dp[n-1][x] << endl;
+    for(int ind = n - 1; ind >= 0; ind--){
+        for(int target = 0; target <= x; target++){
+            dp[ind][target] = dp[ind + 1][target];
+
+            if(coin[ind] <= target){
+                dp[ind][target] = (dp[ind][target] +
+                                  dp[ind][target - coin[ind]]) % mod;
+            }
+        }
+    }
+
+    cout << dp[0][x] << endl;
 }
