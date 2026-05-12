@@ -1,30 +1,29 @@
 #include<bits/stdc++.h>
 using namespace std;
-int mod=1e9+7;
+
 int main(){
     int n,x;
     cin>>n>>x;
-    vector<int>prices(n);
-    for(int i=0;i<n;i++){
-        cin>>prices[i];
-    }
-    vector<int>pages(n);
-    for(int i=0;i<n;i++){
-        cin>>pages[i];
-    }
 
-    vector<int>dp(x+1,0);
-    dp[0]=0;
-    for(int i=0;i<n;i++){
-        for(int j=x;j>=0;j--){
-            int nottake=dp[j];
-            int take=0;
-            if(j>=prices[i]){
-                take=pages[i]+dp[j-prices[i]];
+    vector<int> prices(n), pages(n);
+    for(int i=0;i<n;i++) cin>>prices[i];
+    for(int i=0;i<n;i++) cin>>pages[i];
+
+    vector<vector<int>> dp(n+1 , vector<int>(x+1 , 0));
+
+    for(int ind=n-1; ind>=0; ind--){
+        for(int target=0; target<=x; target++){
+            int nottake = dp[ind+1][target];
+            int take = 0;
+
+            if(target >= prices[ind]){
+                take = pages[ind] + dp[ind+1][target - prices[ind]];
             }
-            dp[j]=max(take,nottake);
+
+            dp[ind][target] = max(take, nottake);
         }
     }
-   cout<<dp[x]<<endl;
-   return 0;
+
+    cout<<dp[0][x]<<endl;
+    return 0;
 }
