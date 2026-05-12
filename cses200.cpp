@@ -31,10 +31,11 @@ int main(){
     int n = str.length();
     int k = lps[n-1];
     while(k>0){
-        borders.push_back(k);
+        borders.push_back(n-k);
         k=lps[k-1];
     }
-    reverse(borders.begin(), borders.end());
+    if(k==0) borders.push_back(n);
+    sort(borders.begin(), borders.end());
     for(auto x: borders){
         cout<<x<<" ";
     }
